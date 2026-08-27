@@ -784,14 +784,14 @@ const alertAudio = document.getElementById("virusAudio");
 
 const ACCOUNT_OUTER = {
   "Albert Wesker": "0724",
-  kael: "04261974",
+  "Kael Voss": "04261974",
   "ALBERTWESKER":"UMBRELLA",
   "Admin-Sec": "poiuytrewq",
   "CNDGTVYGUMG": "XPEUHOOD"
 };
 const ACCOUNT_RPD = {
   albertwesker: "05241996",
-  kael: "reasdf"
+  "kaelvoss": "reasdf"
 };
 const PLAYER_DATA = {
   curOuterUser: "",
@@ -801,7 +801,7 @@ const PLAYER_DATA = {
   readAnonymousMail: false
 };
 const KAEL_INFO = {
-  fullName: "kael Voss",
+  fullName: "Kael Voss",
   birth: "04261974",
   dead: "07151998",
   resetPwd: "07231998"
@@ -869,7 +869,7 @@ function doLogin(){
     }
     // 正常账号才执行欢迎页文字与桌面加载
     const welText = document.querySelector(".welcome-text-2");
-    if(u === "kael") welText.innerText = `Welcome, ${KAEL_INFO.fullName}`;
+    if(u === "Kael Voss") welText.innerText = `Welcome, ${KAEL_INFO.fullName}`;
     else if(u === "Admin-Sec") welText.innerText = `Welcome, Admin-Sec`;
     else welText.innerText = `Welcome, Albert Wesker`;
     const bar = document.getElementById("welcomeBar");
@@ -976,7 +976,7 @@ function refreshDesktopByUser(){
   docIcons.forEach(id=>document.getElementById(id).classList.add("hidden"));
   logIcons.forEach(id=>document.getElementById(id).classList.add("hidden"));
 
-  if(PLAYER_DATA.curOuterUser === "kael"){
+  if(PLAYER_DATA.curOuterUser === "Kael Voss"){
     // kael账号
     trashIcon.classList.remove("hidden");
     tip.classList.add("hidden");
@@ -1175,7 +1175,7 @@ function checkRpdLogin(){
 }
 // 构建邮件列表HTML（改动2：Kael匿名邮件替换为Admin-Sec服务器通知英文）
 function buildMailListHtml(user){
-  if(user === "kael"){
+  if(user === "kaelvoss"){
     let html = "";
     html += `<div class="mail-item locked" style="background:#dcdcdc;color:#666;border-color:#bbb;">[Read] Monthly Schedule - RPD Admin</div>`;
     html += `<div class="mail-item locked" style="background:#dcdcdc;color:#666;border-color:#bbb;">[Read] Equipment Inventory Update</div>`;
@@ -1204,7 +1204,7 @@ function buildMailListHtml(user){
 function openRpdMain(user){
   const mailListHtml = buildMailListHtml(user);
   let reportContent = "";
-  if(user === "kael"){
+  if(user === "kaelvoss"){
     reportContent = `
       <h2 style="color:#000;font-size:28px;margin-bottom:16px;font-weight:bold;">Operation Report</h2>
       <div style="background:#dcdcdc;border:1px solid #999;padding:20px;">
@@ -1224,7 +1224,7 @@ function openRpdMain(user){
       <div style="background:#dcdcdc;border:1px solid #999;padding:20px;margin-bottom:16px;">
         <div style="font-size:20px;line-height:2;color:#000;">
           <div>Operation Date: May 27, 1998</div>
-          <div>Casualty: <span style="color:#0044cc;font-weight:bold;">kael</span> Voss</div>
+          <div>Casualty: <span style="color:#0044cc;font-weight:bold;">Kael</span> Voss</div>
           <div>Lifespan: <span style="color:#0044cc;font-weight:bold;">April 26, 1974</span> -July 15, 1998</div>
           <br>
           <div>Brief: During an external mission for the Raccoon City emergency, the operative was attacked by an unknown creature and confirmed KIA. This report awaits superior account confirmation for archiving.</div>
@@ -1301,7 +1301,7 @@ function showMail1Content(){
     <div style="margin-bottom:16px;cursor:pointer;color:#27c278;text-decoration:underline;font-size:16px;" onclick="backToMailList()">← Back to Mail List</div>
     <h3 style="color:#000;margin-bottom:10px;font-size:20px;">Mail 1 - Account Password Change Request</h3>
     <div style="background:#dcdcdc;border:1px solid #999;padding:20px;color:#000;font-size:16px;line-height:1.8;">
-      From: kael Voss<br>
+      From: Kael Voss<br>
       To: Albert Wesker<br>
       Subject: Regarding Account Password Change Request<br><br>
       Body: Sir, may I change my system account password by myself?<br><br>
@@ -1504,7 +1504,7 @@ function openReport(){
       </div>
       <div class="modal-content">
 Operation Date: 1998-09-27<br>
-Casualty: kael Voss<br>
+Casualty: Kael Voss<br>
 Lifespan: ${KAEL_INFO.birth} - ${KAEL_INFO.dead}<br><br>
 Brief: During an external mission for the Raccoon City emergency, the operative was attacked by an unknown creature and confirmed KIA. This report awaits superior account confirmation for archiving.
       </div>
@@ -1522,7 +1522,7 @@ function readMail1(){
         <span class="modal-close" onclick="closeAllModal()">×</span>
       </div>
       <div class="modal-content">
-From: kael Voss<br>
+From: Kael Voss<br>
 To: Albert Wesker<br>
 Subject: Regarding Account Password Change Request<br><br>
 Body: Sir, may I change my system account password by myself?<br><br>
@@ -1612,7 +1612,7 @@ function showTrashPwdMail(){
     <div style="margin-bottom:16px;cursor:pointer;color:#27c278;text-decoration:underline;font-size:16px;" onclick="backToTrashMailList()">← Back to Deleted Mails</div>
     <h3 style="color:#000;margin-bottom:10px;font-size:20px;">Password Reset Request</h3>
     <div style="background:#dcdcdc;border:1px solid #999;padding:20px;color:#000;font-size:16px;line-height:1.8;">
-      From: kael Voss<br>
+      From: Kael Voss<br>
       To: System Administrator<br>
       Body: Hello administrator, I forgot my account password, requesting a login password reset.<br><br>
       ————Administrator Reply————<br>
@@ -1636,7 +1636,7 @@ function readAnonymousMail(){
   let list = `
 1. Albert Wesker (main outer account)<br>
 2. ${WESKER_SEC.name} (Albert Wesker backup secondary outer account | password: ${WESKER_SEC.pwd})<br>
-3. kael<br>
+3. Kael Voss<br>
 4. mail-item locked" style="background:#dcdcdc;color:#666;border-color:#bbb;">4. oren hale<br>
 5. milo ford<br>
 6. elsa reid<br>
