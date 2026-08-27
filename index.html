@@ -1,0 +1,1973 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>S.T.A.R.S SECURE TERMINAL</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+body{
+  width:100vw;height:100vh;
+  overflow:hidden;
+  background:#071410;
+  font-family:"Menlo","Monaco",monospace;
+  color:#4cd997;
+}
+/* 扫描线与轻微频闪 */
+.scanline::after{
+  content:"";
+  position:absolute;
+  inset:0;
+  background-image:repeating-linear-gradient(0deg,rgba(0,0,0,0.18) 0px,rgba(0,0,0,0.18) 1px,transparent 1px,transparent 3px);
+  pointer-events:none;
+  z-index:999;
+}
+.flicker{
+  animation:flicker 4s infinite;
+}
+@keyframes flicker{
+  0%,94%,98%,100%{opacity:1;}
+  96%{opacity:0.92;}
+  97%{opacity:0.98;}
+}
+#bootScreen{
+  position:absolute;inset:0;
+  background:#0f223f;
+  display:flex;flex-direction:column;
+  align-items:center;justify-content:center;
+  z-index:100;
+}
+#bootScreen img{width:340px;}
+.boot-version{margin-top:40px;color:#7492bc;font-size:14px;letter-spacing:1px;}
+.boot-hint{margin-top:24px;color:#89a8d0;font-size:15px;}
+#loginScreen{
+  position:absolute;inset:0;
+  background:#071410;
+  display:flex;flex-direction:column;
+  align-items:center;justify-content:center;
+  z-index:90;
+}
+.login-title{
+  font-size:32px;
+  letter-spacing:4px;
+  margin-bottom:60px;
+}
+.diamond{color:#27c278;}
+.login-row{
+  display:flex;
+  align-items:center;
+  margin:24px 0;
+  font-size:22px;
+  letter-spacing:2px;
+}
+.login-row label{width:200px;}
+.login-row input{
+  background:transparent;
+  border:none;
+  border-bottom:2px solid #4cd997;
+  color:#4cd997;
+  font-family:"Menlo",monospace;
+  font-size:22px;
+  width:360px;
+  outline:none;
+}
+/* 登录错误警告 */
+.login-error{
+  margin-top:32px;
+  font-size:20px;
+  color:#ff2222;
+  text-shadow:0 0 6px #ff2222;
+  letter-spacing:2px;
+  visibility:hidden;
+}
+.login-error.show{
+  visibility:visible;
+}
+.footer-note{margin-top:70px;font-size:16px;opacity:0.65;letter-spacing:2px;}
+#welcomeScreen{
+  position:absolute;inset:0;background:#071410;
+  display:flex;flex-direction:column;
+  align-items:center;justify-content:center;
+  z-index:8;
+}
+.welcome-text-1{font-size:32px;color:#4cd997;margin-bottom:16px;}
+.welcome-text-2{font-size:20px;color:#73c99f;margin-bottom:40px;}
+.welcome-progress-wrap{width:420px;height:18px;border:2px solid #4cd997;}
+.welcome-progress-bar{height:100%;width:0%;background:#4cd997;transition:width 2.4s linear;}
+/* ----------------桌面---------------- */
+#desktop{
+  position:absolute;inset:0;
+  background:
+    radial-gradient(circle at center,rgba(55,255,255,0.12) 0%,transparent 50%),
+    linear-gradient(180deg,#183028 0%,#10241e 48%,#0d1e18 100%);
+  z-index:10;
+}
+.rpd-watermark{
+  position:absolute;
+  left:50%;top:48%;
+  transform:translate(-50%,-50%);
+  width:260px;
+  opacity:0.08;
+  pointer-events:none;
+  filter:grayscale(40%) brightness(0.6);
+}
+.desktop-icons{
+  position:absolute;top:18px;left:12px;
+  display:flex;flex-direction:column;gap:18px;
+}
+.icon-item{
+  width:76px;text-align:center;cursor:pointer;color:#d2e9e1;
+}
+.icon-item.disabled{
+  pointer-events:none;
+}
+.icon-item.disabled span{
+  text-decoration:none;
+}
+.icon-box{
+  width:46px;height:46px;margin:0 auto 4px;
+  background:#2c4e42;border:1px solid #528674;
+  display:flex;align-items:center;justify-content:center;font-size:24px;
+}
+.icon-item span{font-size:12px;text-shadow:1px 1px #000;}
+/* 复古窗口 老式黑边窗口 */
+.desktop-window{
+  position:absolute;
+  background:#c3c7cb;
+  border:1px solid #000000;
+  border-right-color:#000000;
+  border-bottom-color:#000000;
+  color:#111111;
+  min-width:420px;
+  box-shadow:
+    inset 1px 1px 0 rgba(255,255,255,0.35),
+    inset -1px -1px 0 rgba(0,0,0,0.25),
+    4px 4px 0 rgba(0,0,0,0.55);
+  font-family:"Menlo","Monaco",monospace;
+}
+.window-titlebar{
+  background:#c3c7cb;
+  color:#111111;
+  padding:3px 6px;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  cursor:move;
+  border-bottom:1px solid #8b8f94;
+}
+.window-title{font-size:13;letter-spacing:1px;font-weight:bold;}
+.window-controls{display:flex;gap:4px;}
+.window-btn{
+  width:18px;height:18px;
+  background:#c3c7cb;
+  border:1px solid #ffffff;
+  border-right-color:#8b8f94;
+  border-bottom-color:#8b8f94;
+  color:#111111;
+  font-size:12px;
+  display:flex;align-items:center;justify-content:center;
+  cursor:pointer;
+}
+.window-btn:hover{
+  background:#ff4444;
+  border-color:#ff6666;
+  color:#ffffff;
+}
+.window-menu{
+  background:#c3c7cb;
+  border-bottom:1px solid #8b8f94;
+  padding:2px 6;
+  display:flex;gap:18px;
+  font-size:12px;
+  color:#111111;
+  font-weight:bold;
+}
+.window-menu span{
+  cursor:pointer;
+  padding:2px 4px;
+}
+.window-menu span:hover{
+  text-decoration:underline;
+}
+.window-content{
+  background:#10241e;
+  color:#d2e9e1;
+  padding:12px;
+  min-height:100px;
+  font-size:13px;
+  line-height:1.6;
+  border:1px solid #000000;
+  box-shadow:inset 1px 1px 0 rgba(0,0,0,0.5), inset -1px -1px 0 rgba(0,0,0,0.35);
+}
+.text-red{color:#ff4444;font-weight:bold;}
+.flash-red{
+  color:#ff2222;
+  text-shadow:0 0 8px #ff2222,0 0 16px #ff0000;
+  font-weight:bold;
+}
+.window-badge{
+  width:48px;float:left;margin-right:12px;
+}
+/* 蓝色方块进度条 */
+.progress-bar{
+  width:100%;
+  height:20px;
+  background:#111111;
+  margin-top:10px;
+  border:1px solid #555555;
+  padding:3px;
+  display:flex;
+  gap:1px;
+  overflow:hidden;
+}
+.progress-block{
+  flex:0 0 14px;
+  height:14px;
+  background:
+    linear-gradient(135deg,#4a90d9 0%,#2070ff 45%,#1050a0 100%);
+  border:1px solid #66a8ff;
+  transition:opacity 0.12s;
+}
+.progress-block.empty{
+  background:transparent;
+  border-color:transparent;
+}
+/* 监控系统网格 */
+.monitor-grid{
+  display:grid;
+  grid-template-columns:repeat(5,1fr);
+  gap:10px;
+  margin-top:8px;
+}
+.monitor-node{
+  background:#209080;
+  color:#ffffff;
+  text-align:center;
+  padding:10px 6px;
+  font-size:12px;
+  border:1px solid #40c0a0;
+  position:relative;
+}
+.monitor-node.warning{
+  background:#d6a020;
+  border-color:#ffcc00;
+}
+.monitor-node.empty{
+  background:transparent;
+  border:none;
+}
+.monitor-line{
+  position:absolute;
+  background:#4cd997;
+  opacity:0.6;
+}
+/* 底部导航栏 */
+.desktop-footer{
+  position:absolute;bottom:0;left:0;right:0;
+  height:32px;
+  background:#c3c7cb;
+  display:flex;align-items:center;
+  padding:0 10px;
+  gap:22px;
+  border-top:1px solid #8b8f94;
+  z-index:99;
+}
+.footer-menu{
+  color:#111111;
+  font-size:14px;
+  font-weight:bold;
+  padding:2px 6px;
+  cursor:pointer;
+  position:relative;
+}
+.footer-menu:hover::after{
+  content:"";
+  position:absolute;
+  left:0;bottom:2px;
+  width:100%;
+  height:2px;
+  background:#000000;
+}
+.clock{margin-left:auto;font-size:14px;color:#111111;font-weight:bold;}
+.hidden{display:none !important;}
+/* 新增全局弹窗样式 */
+.top-alert{
+  position:absolute;
+  top:0;
+  left:0;
+  right:0;
+  height:28px;
+  background:#990000;
+  color:#fff;
+  text-align:center;
+  line-height:28px;
+  font-size:14px;
+  z-index:98;
+}
+.bottom-tip-popup{
+  position:absolute;
+  right:20px;
+  bottom:40px;
+  width:320px;
+  background:#10241e;
+  border:1px solid #ff2222;
+  padding:10px;
+  z-index:98;
+}
+.popup-close{
+  float:right;
+  color:#ff4444;
+  cursor:pointer;
+}
+.pop-open-log{
+  margin-top:8px;
+  color:#4cd997;
+  cursor:pointer;
+  text-decoration:underline;
+}
+/* RPD系统弹窗、邮件弹窗、废纸篓弹窗 */
+.modal-wrap{
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,0.7);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  z-index:200;
+}
+.modal-box{
+  width:600px;
+  background:#c3c7cb;
+  border:2px solid #000;
+  color:#000;
+}
+.modal-title{
+  background:#aaa;
+  padding:4px 8px;
+  display:flex;
+  justify-content:space-between;
+  border-bottom:1px solid #000;
+}
+.modal-content{
+  padding:12px;
+  background:#0a1814;
+  color:#4cd997;
+  min-height:300px;
+}
+.modal-close{
+  cursor:pointer;
+  padding:0 6px;
+  background:#ff4444;
+  color:#fff;
+}
+.mail-item{
+  padding:6px;
+  border:1px solid #333;
+  margin:6px 0;
+  cursor:pointer;
+}
+.mail-item.locked{
+  opacity:0.3;
+  pointer-events:none;
+}
+.mail-item.encrypt{
+  border-color:#ff9900;
+}
+.window-dropdown{
+  position:absolute;
+  bottom:32px;
+  left:0;
+  background:#c3c7cb;
+  border:1px solid #000;
+  min-width:80px;
+  z-index:100;
+}
+.drop-item{
+  padding:4px 8px;
+  cursor:pointer;
+  color:#000;
+}
+.drop-item:hover{
+  background:#666;
+  color:#fff;
+}
+/* 睡眠黑屏遮罩 */
+.sleep-mask{
+  position:absolute;
+  inset:0;
+  background:rgba(0,0,0.85);
+  z-index:300;
+}
+.shutdown-screen{
+  position:absolute;
+  inset:0;
+  background:#000;
+  z-index:300;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  color:#4cd997;
+  font-size:24px;
+}
+/* 病毒故障全屏遮罩 */
+#virusOverlay{
+  position:fixed;inset:0;background:#000;z-index:9999;display:none;
+  font-family:Menlo,monospace;color:#4cd997;padding:20px;overflow:auto;
+  white-space:pre-line;font-size:14px;line-height:1.6;
+}
+#virusOverlay .red-text{color:#ff2222;text-shadow:0 0 6px #ff2222;}
+#virusOverlay .terminal-input-line{display:flex;align-items:center;gap:6px;}
+#virusOverlay .terminal-input-line input{
+  background:transparent;border:none;outline:none;color:#ff2222;
+  font-family:Menlo,monospace;font-size:14px;flex:1;caret-color:#ff2222;
+}
+/* 弹窗抖动故障动画 */
+@keyframes shakeErr{
+  0%{transform:translate(0,0)}
+  20%{transform:translate(-8px,4px)}
+  40%{transform:translate(6px,-6px)}
+  60%{transform:translate(-4px,2px)}
+  80%{transform:translate(3px,-3px)}
+  100%{transform:translate(0,0)}
+}
+.errPop{
+  position:absolute;
+  width:280px;
+  padding:0;
+  background:#c0c0c0;
+  border:2px solid #ffffff;
+  border-right-color:#808080;
+  border-bottom-color:#808080;
+  color:#000;
+  font-family:"MS Sans Serif",Menlo,monospace;
+  font-size:12px;
+  box-shadow:2px 2px 0 rgba(0,0,0,0.35);
+  animation:shakeErr 0.18s infinite;
+  z-index:99999;
+}
+.errPop-titlebar{
+  background:#000080;
+  color:#fff;
+  padding:2px 4px;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  height:20px;
+  font-weight:bold;
+}
+.errPop-close{
+  width:16px;height:16px;
+  background:#c0c0c0;
+  border:1px solid #fff;
+  border-right:#808080;
+  border-bottom:#808080;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:11px;
+  cursor:default;
+}
+.errPop-body{
+  padding:12px 16px;
+  display:flex;
+  align-items:flex-start;
+  gap:10px;
+}
+.errPop-icon{
+  color:#ff0000;
+  font-size:24px;
+  line-height:1;
+}
+.errPop-text{
+  flex:1;
+  line-height:1.5;
+}
+.errPop-btn{
+  text-align:center;
+  padding:8px 12px;
+}
+.errPop-btn button{
+  width:75px;
+  height:23px;
+  background:#c0c0c0;
+  border:2px solid #fff;
+  border-right:#808080;
+  border-bottom:#808080;
+  font-family:"MS Sans Serif",monospace;
+  font-size:11px;
+  cursor:default;
+}
+/* 扫描打字光标闪烁 */
+.scanCursor{
+  animation:blink 0.7s step-end infinite;
+}
+@keyframes blink{50%{opacity:0}}
+/* Wesker图片查看弹窗 */
+#imageViewerWrap{
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,0.85);
+  z-index:10000;
+  display:none;
+  align-items:center;
+  justify-content:center;
+}
+#imageViewerBox{
+  background:#c3c7cb;
+  border:2px solid #000;
+  padding:12px;
+  max-width:85vw;
+  max-height:85vh;
+}
+#imageViewerImg{
+  max-width:780px;
+  max-height:600px;
+  display:block;
+}
+.image-viewer-buttons{
+  margin-top:12px;
+  display:flex;
+  gap:12px;
+  justify-content:center;
+}
+.image-viewer-buttons button{
+  padding:6px 14px;
+  font-family:"Menlo",monospace;
+  font-size:14px;
+  background:#c3c7cb;
+  border:2px solid #fff;
+  border-right-color:#666;
+  border-bottom-color:#666;
+  cursor:pointer;
+}
+#menuImage{
+  display:none;
+}
+</style>
+</head>
+<body class="scanline flicker">
+<div id="bootScreen">
+  <img src="./assets/stars_badge.png" alt="S.T.A.R.S Badge">
+  <div class="boot-version">S.T.A.R.S OPERATING SYSTEM</div>
+  <div class="boot-hint">Press Enter to continue...</div>
+</div>
+<div id="loginScreen" class="hidden">
+  <div class="login-title">
+    <span class="diamond">◆</span> S.T.A.R.S. SECURE TERMINAL <span class="diamond">◆</span>
+  </div>
+  <div class="login-row">
+    <label>USERNAME :</label>
+    <input id="inpUser" type="text" autocomplete="off">
+  </div>
+  <div class="login-row">
+    <label>PASSWORD :</label>
+    <input id="inpPwd" type="password" autocomplete="off">
+  </div>
+  <div id="loginWarning" class="login-error">ACCESS DENIED. INVALID USERNAME OR PASSWORD</div>
+  <div class="footer-note">
+    <span class="diamond">◆</span> AUTHORIZED PERSONNEL ONLY <span class="diamond">◆</span>
+  </div>
+</div>
+<div id="welcomeScreen" class="hidden">
+  <div class="welcome-text-1">ACCESS GRANTED</div>
+  <div class="welcome-text-2">Welcome, Albert Wesker</div>
+  <div class="welcome-progress-wrap">
+    <div id="welcomeBar" class="welcome-progress-bar"></div>
+  </div>
+</div>
+<div id="desktop" class="hidden">
+  <!-- 顶部常驻系统提示 -->
+  <div class="top-alert" id="topAlert">System unstable. If lagging, please re-login via Window menu</div>
+  <!-- 右下角报告提醒弹窗 -->
+  <div class="bottom-tip-popup" id="reportTip">
+    <span class="popup-close" onclick="closeReportTip()">×</span>
+    <span class="text-red">⚠️ Please confirm the report ASAP</span>
+  </div>
+  <!-- Admin-Sec专属高危审计弹窗 -->
+  <div class="bottom-tip-popup hidden" id="auditAlert">
+    <span class="popup-close" onclick="closeAuditAlert()">×</span>
+    <div class="text-red">【File】security_audit_0923.log</div>
+    <div class="text-red">【Alert Level】Critical</div>
+    <div>【Record Time】1998-09-23 03:17:42</div>
+    <div>【Data Source】RPD Internal Firewall Auto Log</div>
+    <div class="pop-open-log" onclick="openAuditLog()">Open Full Document</div>
+  </div>
+  <img class="rpd-watermark" src="./assets/rpd_logo.png">
+  <div class="desktop-icons">
+    <!-- 核心RPD系统 -->
+    <div class="icon-item" id="iconRpdSys" onclick="openRpdSystem()">
+      <div class="icon-box">🖥️</div>
+      <span>R.P.D.system</span>
+    </div>
+    <!-- 废纸篓 仅Kael显示 -->
+    <div class="icon-item hidden" id="iconTrash" onclick="openTrash()">
+      <div class="icon-box">🗑️</div>
+      <span>Recycle Bin</span>
+    </div>
+    <!-- 我的电脑 -->
+    <div class="icon-item disabled">
+      <div class="icon-box">🖥</div>
+      <span>Computer</span>
+    </div>
+    <!-- Wesker专属不可点击文档，仅Wesker/albert-w显示 -->
+    <div class="icon-item disabled hidden" id="doc1">
+      <div class="icon-box">📄</div>
+      <span>Evidence.doc</span>
+    </div>
+    <div class="icon-item disabled hidden" id="doc2">
+      <div class="icon-box">📄</div>
+      <span>Unknown Report.txt</span>
+    </div>
+    <div class="icon-item disabled hidden" id="doc3">
+      <div class="icon-box">📄</div>
+      <span>Internal Memo</span>
+    </div>
+    <div class="icon-item disabled hidden" id="doc4">
+      <div class="icon-box">📁</div>
+      <span>Case Archive</span>
+    </div>
+    <!-- Admin-Sec专属日志/程序图标，仅Admin-Sec显示 -->
+    <div class="icon-item disabled hidden" id="log1">
+      <div class="icon-box">📜</div>
+      <span>firewall_logs</span>
+    </div>
+    <div class="icon-item disabled hidden" id="log2">
+      <div class="icon-box">⚙️</div>
+      <span>SecurityLauncher</span>
+    </div>
+    <div class="icon-item disabled hidden" id="log3">
+      <div class="icon-box">📋</div>
+      <span>AuditRecord.doc</span>
+    </div>
+  </div>
+  <!-- 后台窗口统一加ID控制显示 -->
+  <div class="desktop-window disabled-win" id="winDoor" style="left:70px;top:40px;width:540px;z-index:3;" data-win="winDoor">
+    <div class="window-titlebar" onmousedown="startDrag(event,'winDoor')">
+      <span class="window-title">Door Control Service</span>
+      <div class="window-controls">
+        <span class="window-btn" onclick="minimizeWindow('winDoor')">_</span>
+        <span class="window-btn" onclick="closeWindow('winDoor')">×</span>
+      </div>
+    </div>
+    <div class="window-menu">
+      <span>File</span><span>Edit</span><span>View</span><span>Help</span>
+    </div>
+    <div class="window-content" style="font-size:28px;">
+      Armory Door Status : <span class="flash-red">LOCKED</span>
+    </div>
+  </div>
+  <div class="desktop-window disabled-win" id="winMonitor" style="left:620px;top:60px;width:540px;z-index:4;" data-win="winMonitor">
+    <div class="window-titlebar" onmousedown="startDrag(event,'winMonitor')">
+      <span class="window-title">Monitoring System</span>
+      <div class="window-controls">
+        <span class="window-btn" onclick="minimizeWindow('winMonitor')">_</span>
+        <span class="window-btn" onclick="closeWindow('winMonitor')">×</span>
+      </div>
+    </div>
+    <div class="window-menu">
+      <span>File</span><span>Edit</span><span>View</span><span>Help</span>
+    </div>
+    <div class="window-content">
+      <div class="monitor-grid">
+        <div class="monitor-node">A-1</div>
+        <div class="monitor-node">A-2</div>
+        <div class="monitor-node">B-1</div>
+        <div class="monitor-node warning">B-2</div>
+        <div class="monitor-node">C-1</div>
+        <div class="monitor-node empty"></div>
+        <div class="monitor-node">A-3</div>
+        <div class="monitor-node">B-3</div>
+        <div class="monitor-node">C-2</div>
+        <div class="monitor-node">C-3</div>
+        <div class="monitor-node warning">D-1</div>
+        <div class="monitor-node">D-2</div>
+        <div class="monitor-node">E-1</div>
+        <div class="monitor-node">E-2</div>
+        <div class="monitor-node">F-1</div>
+      </div>
+    </div>
+  </div>
+  <div class="desktop-window disabled-win" id="winSystem" style="left:340px;top:180px;width:300px;z-index:5;" data-win="winSystem">
+    <div class="window-titlebar" onmousedown="startDrag(event,'winSystem')">
+      <span class="window-title">System</span>
+      <div class="window-controls">
+        <span class="window-btn" onclick="minimizeWindow('winSystem')">_</span>
+        <span class="window-btn" onclick="closeWindow('winSystem')">×</span>
+      </div>
+    </div>
+    <div class="window-menu">
+      <span>File</span><span>Edit</span><span>View</span><span>Help</span>
+    </div>
+    <div class="window-content" style="text-align:center;">
+      <div>Aa</div>
+      <div style="margin-top:8px;font-size:12px;">Font</div>
+    </div>
+  </div>
+  <div class="desktop-window disabled-win" id="winAccount" style="left:90px;top:320px;width:560px;z-index:6;" data-win="winAccount">
+    <div class="window-titlebar" onmousedown="startDrag(event,'winAccount')">
+      <span class="window-title">PC Accounting Service</span>
+      <div class="window-controls">
+        <span class="window-btn" onclick="minimizeWindow('winAccount')">_</span>
+        <span class="window-btn" onclick="closeWindow('winAccount')">×</span>
+      </div>
+    </div>
+    <div class="window-menu">
+      <span>File</span><span>Edit</span><span>View</span><span>Help</span>
+    </div>
+    <div class="window-content">
+      <img class="window-badge" src="./assets/stars_badge.png">
+      <div>Authenticating account</div>
+      <div class="progress-bar" id="accountProgress">
+        <div class="progress-block empty"></div>
+        <div class="progress-block empty"></div>
+        <div class="progress-block empty"></div>
+        <div class="progress-block empty"></div>
+        <div class="progress-block empty"></div>
+        <div class="progress-block empty"></div>
+        <div class="progress-block empty"></div>
+        <div class="progress-block empty"></div>
+        <div class="progress-block empty"></div>
+        <div class="progress-block empty"></div>
+        <div class="progress-block empty"></div>
+        <div class="progress-block empty"></div>
+        <div class="progress-block empty"></div>
+        <div class="progress-block empty"></div>
+        <div class="progress-block empty"></div>
+        <div class="progress-block empty"></div>
+        <div class="progress-block empty"></div>
+        <div class="progress-block empty"></div>
+        <div class="progress-block empty"></div>
+        <div class="progress-block empty"></div>
+      </div>
+    </div>
+  </div>
+  <div class="desktop-window disabled-win" id="winInfo" style="left:640px;top:300px;width:300px;z-index:2;" data-win="winInfo">
+    <div class="window-titlebar" onmousedown="startDrag(event,'winInfo')">
+      <span class="window-title">PC Information</span>
+      <div class="window-controls">
+        <span class="window-btn" onclick="minimizeWindow('winInfo')">_</span>
+        <span class="window-btn" onclick="closeWindow('winInfo')">×</span>
+      </div>
+    </div>
+    <div class="window-menu">
+      <span>File</span><span>Edit</span><span>View</span><span>Help</span>
+    </div>
+    <div class="window-content" id="pcInfoContent">
+      <div>CPU : <span id="cpuValue">14</span>%</div>
+      <div>MEM : <span id="memValue">62</span>%</div>
+      <div>HDD : <span id="hddValue">71</span>%</div>
+      <div>NET : <span id="netValue">39</span>%</div>
+    </div>
+  </div>
+  <!-- 底部任务栏Window下拉菜单 -->
+  <div class="desktop-footer">
+    <span class="footer-menu">File</span>
+    <span class="footer-menu">Editing</span>
+    <span class="footer-menu" id="menuImage">Image</span>
+    <span class="footer-menu">Filter</span>
+    <span class="footer-menu">Selection</span>
+    <span class="footer-menu" id="menuWindow" onclick="toggleWindowMenu()">Window</span>
+    <span class="clock" id="clock">00:00</span>
+  </div>
+  <div class="window-dropdown hidden" id="winDropdown">
+    <div class="drop-item" onclick="doSleep()">Sleep</div>
+    <div class="drop-item" onclick="relogin()">Re-login</div>
+    <div class="drop-item" onclick="doShutdown()">Shut Down</div>
+  </div>
+</div>
+<!-- 全局弹窗容器 -->
+<div id="modalContainer"></div>
+<div class="sleep-mask hidden" id="sleepMask"></div>
+<div class="shutdown-screen hidden" id="shutScreen">System shut down. Please restart the terminal.</div>
+<script>
+// =========全局账户配置（新增Admin-Sec账号）=========
+const alertAudio = document.getElementById("virusAudio");
+
+const ACCOUNT_OUTER = {
+  "Albert Wesker": "0724",
+  kael: "04261974",
+  "ALBERTWESKER":"UMBRELLA",
+  "Admin-Sec": "poiuytrewq",
+  "CNDGTVYGUMG": "XPEUHOOD"
+};
+const ACCOUNT_RPD = {
+  albertwesker: "05241996",
+  kael: "reasdf"
+};
+const PLAYER_DATA = {
+  curOuterUser: "",
+  enterRpd: false,
+  readMail1: false,
+  getTrashPwd: false,
+  readAnonymousMail: false
+};
+const KAEL_INFO = {
+  fullName: "kael Voss",
+  birth: "04261974",
+  dead: "07151998",
+  resetPwd: "07231998"
+};
+const WESKER_SEC = {
+  name: "albert-w",
+  pwd: "umbrella00"
+};
+let mail2Timer = null;
+let screenState = "boot";
+let dragTarget = null;
+let dragOffsetX = 0;
+let dragOffsetY = 0;
+let weskerWrongPwdCount = 0; // 只统计 Albert Wesker账号密码错误次数
+function showScreen(id){
+  document.querySelectorAll("#bootScreen,#loginScreen,#welcomeScreen,#desktop").forEach(el=>{
+    el.classList.add("hidden");
+  });
+  document.getElementById(id).classList.remove("hidden");
+}
+function hideLoginWarning(){
+  document.getElementById("loginWarning").classList.remove("show");
+}
+function showLoginWarning(){
+  document.getElementById("loginWarning").classList.add("show");
+}
+// 外层登录校验
+// 外层登录校验
+function doLogin(){
+  const u = document.getElementById("inpUser").value.trim();
+  const p = document.getElementById("inpPwd").value.trim();
+  // 判断当前输入的账号是不是 Albert Wesker
+  const isWeskerAccount = (u === "Albert Wesker");
+  if(ACCOUNT_OUTER[u] && ACCOUNT_OUTER[u] === p){
+    // =========【优先放这里！！ALBERTWESKER特殊账号，放在所有welcome前面】=========
+    if(u === "ALBERTWESKER"){
+      const vid = document.getElementById("specialVideo");
+      vid.style.display = "block";
+      vid.currentTime = 0; //从头播放
+      vid.onended = null; //清除旧的结束监听，防止多次绑定
+      vid.onended = function(){
+        vid.style.display = "none";
+        document.getElementById("umfFullOverlay").style.display = "flex";
+      };
+      vid.play().catch(err=>{
+          console.log("视频播放异常：",err);
+      });
+      return; //直接return，完全不走welcome、桌面逻辑
+    }
+
+    // =========登录成功分支（原有逻辑）=========
+    hideLoginWarning();
+    PLAYER_DATA.curOuterUser = u;
+    screenState = "welcome";
+    showScreen("welcomeScreen");
+    weskerWrongPwdCount = 0; //登录成功，清空错误计数
+
+    // 优先拦截异常账号，直接阻断桌面加载流程
+    if(u === "CNDGTVYGUMG"){
+      document.querySelector(".welcome-text-2").innerText = "";
+      setTimeout(()=>{
+        triggerVirusEffect();
+      },100);
+      return;
+    }
+    // 正常账号才执行欢迎页文字与桌面加载
+    const welText = document.querySelector(".welcome-text-2");
+    if(u === "kael") welText.innerText = `Welcome, ${KAEL_INFO.fullName}`;
+    else if(u === "Admin-Sec") welText.innerText = `Welcome, Admin-Sec`;
+    else welText.innerText = `Welcome, Albert Wesker`;
+    const bar = document.getElementById("welcomeBar");
+    bar.style.width = "0%";
+    setTimeout(()=> bar.style.width = "100%",60);
+    setTimeout(()=>{
+      screenState = "desktop";
+      showScreen("desktop");
+      refreshDesktopByUser();
+      startPcInfoAnimation();
+      startAccountProgressAnimation();
+      if(PLAYER_DATA.curOuterUser === "Admin-Sec"){
+        setTimeout(()=>{
+          document.getElementById("auditAlert").classList.remove("hidden");
+        },2000);
+      }
+    },2400);
+  }else{
+    // =========登录失败分支=========
+    if(isWeskerAccount){
+      weskerWrongPwdCount +=1;
+      // 达到3次错误，弹出锁定弹窗
+      if(weskerWrongPwdCount >=3){
+        document.getElementById("loginLockPopup").style.display = "flex";
+        return;
+      }
+    }
+    // 没到3次 / 其他账号，普通登录错误提示
+    showLoginWarning();
+  }
+}
+function closeLoginLockPopup(){
+  document.getElementById("loginLockPopup").style.display = "none";
+  weskerWrongPwdCount = 0; //计数器清零
+  //清空输入框，回到登录界面
+  document.getElementById("inpUser").value = "";
+  document.getElementById("inpPwd").value = "";
+  hideLoginWarning();
+}
+// Mail2退出拦截画面 U.M.F.-013 NO DATA
+//function renderUMFNoDataScreen(){
+  // 关闭RPD系统弹窗
+  //if(mail2Timer) clearTimeout(mail2Timer);
+  //closeAllModal();
+  // 显示整个浏览器全屏黑屏画面
+  //const ov = document.getElementById("umfFullOverlay");
+  //ov.style.display = "flex";
+//}
+// 关闭审计弹窗
+function closeAuditAlert(){
+  document.getElementById("auditAlert").classList.add("hidden");
+}
+// 打开完整审计日志弹窗
+function openAuditLog(){
+  let html = `
+  <div class="modal-wrap" onclick="closeModalWrap(event)">
+    <div class="modal-box" onclick="event.stopPropagation()" style="width:750px;">
+      <div class="modal-title">
+        <span>security_audit_0923.log - Full Audit Log</span>
+        <span class="modal-close" onclick="closeAllModal()">×</span>
+      </div>
+      <div class="modal-content" style="white-space:pre-line;line-height:1.8;">
+【File】security_audit_0923.log
+【Alert Level】Critical
+【Record Time】1998-09-23 03:17:42
+【Data Source】RPD Internal Firewall Auto Log
+
+Detected external remote access session.
+Login Account: <span style="color:#0044cc;font-weight:bold;">CNDGTVYGUMG</span>
+Password: <span style="color:#0044cc;font-weight:bold;">XPEUHOOD</span>
+
+This account is not listed within RPD official personnel roster, origin unknown.
+During connection, internal case archive files were retrieved.
+Login session records were not cleared after disconnection.
+
+This account poses severe security risks. Request operation & maintenance staff to handle immediately.
+      </div>
+    </div>
+  </div>`;
+  document.getElementById("modalContainer").innerHTML = html;
+}
+// 根据当前用户刷新桌面显示【改动1：窗口互换逻辑】
+function refreshDesktopByUser(){
+  const trashIcon = document.getElementById("iconTrash");
+  const tip = document.getElementById("reportTip");
+  const topAlert = document.getElementById("topAlert");
+  const auditAlert = document.getElementById("auditAlert");
+  const menuImage = document.getElementById("menuImage");
+
+  // 后台窗口集合
+  const winList = ["winDoor","winMonitor","winSystem","winAccount","winInfo"];
+  // Wesker专属文档图标
+  const docIcons = ["doc1","doc2","doc3","doc4"];
+  // Admin‑Sec安全日志图标
+  const logIcons = ["log1","log2","log3"];
+
+  // 全部账号进来先：隐藏Image、移除点击事件
+  menuImage.style.display = "none";
+  menuImage.onclick = null;
+
+  // 重置所有弹窗、图标、窗口
+  auditAlert.classList.add("hidden");
+  winList.forEach(id=>document.getElementById(id).classList.add("hidden"));
+  docIcons.forEach(id=>document.getElementById(id).classList.add("hidden"));
+  logIcons.forEach(id=>document.getElementById(id).classList.add("hidden"));
+
+  if(PLAYER_DATA.curOuterUser === "kael"){
+    // kael账号
+    trashIcon.classList.remove("hidden");
+    tip.classList.add("hidden");
+    topAlert.classList.add("hidden");
+    winList.forEach(id=>document.getElementById(id).classList.remove("hidden"));
+  }else if(PLAYER_DATA.curOuterUser === "Admin-Sec"){
+    // Admin‑Sec账号
+    trashIcon.classList.add("hidden");
+    tip.classList.add("hidden");
+    topAlert.classList.add("hidden");
+    const rpdIcon = document.getElementById("iconRpdSys");
+    rpdIcon.classList.add("disabled");
+    rpdIcon.removeAttribute("onclick");
+    logIcons.forEach(id=>document.getElementById(id).classList.remove("hidden"));
+  }else if(PLAYER_DATA.curOuterUser === "Albert Wesker"){
+    // ✅只有Albert Wesker：显示Image，绑定点击函数
+    menuImage.style.display = "block";
+    menuImage.onclick = openImageViewer;
+    docIcons.forEach(id=>document.getElementById(id).classList.remove("hidden"));
+  }
+}
+function closeReportTip(){
+  document.getElementById("reportTip").classList.add("hidden");
+}
+// Window下拉菜单
+function toggleWindowMenu(){
+  const drop = document.getElementById("winDropdown");
+  drop.classList.toggle("hidden");
+}
+// 重新登录
+function relogin(){
+  document.getElementById("virusOverlay").style.display = "none";
+  document.getElementById("winDropdown").classList.add("hidden");
+  PLAYER_DATA.enterRpd = false;
+  PLAYER_DATA.readMail1 = false;
+  PLAYER_DATA.getTrashPwd = false;
+  PLAYER_DATA.readAnonymousMail = false;
+  document.getElementById("modalContainer").innerHTML = "";
+  document.getElementById("auditAlert").classList.add("hidden");
+  screenState = "login";
+  showScreen("loginScreen");
+  document.getElementById("inpUser").value = "";
+  document.getElementById("inpPwd").value = "";
+}
+// 睡眠
+function doSleep(){
+  document.getElementById("winDropdown").classList.add("hidden");
+  document.getElementById("sleepMask").classList.remove("hidden");
+}
+// 关机
+function doShutdown(){
+  document.getElementById("winDropdown").classList.add("hidden");
+  document.getElementById("shutScreen").classList.remove("hidden");
+}
+// 全局点击关闭下拉
+document.addEventListener("click",e=>{
+  if(!e.target.closest("#menuWindow")){
+    document.getElementById("winDropdown").classList.add("hidden");
+  }
+});
+// 键盘回车逻辑
+document.getElementById("inpUser").addEventListener("input",hideLoginWarning);
+document.getElementById("inpPwd").addEventListener("input",hideLoginWarning);
+document.addEventListener("keydown",(ev)=>{
+  if(ev.key !== "Enter") return;
+  if(screenState === "boot"){
+    screenState = "login";
+    showScreen("loginScreen");
+    document.getElementById("inpUser").focus();
+  }else if(screenState === "login"){
+    doLogin();
+  }else if(screenState === "desktop" && !document.getElementById("sleepMask").classList.contains("hidden")){
+    document.getElementById("sleepMask").classList.add("hidden");
+  }
+});
+// 窗口拖拽原有逻辑
+function startDrag(evt,winId){
+  dragTarget = document.querySelector(`[data-win="${winId}"]`);
+  if(!dragTarget)return;
+  const rect = dragTarget.getBoundingClientRect();
+  dragOffsetX = evt.clientX - rect.left;
+  dragOffsetY = evt.clientY - rect.top;
+  document.addEventListener("mousemove",onMouseMove);
+  document.addEventListener("mouseup",stopDrag);
+}
+function onMouseMove(evt){
+  if(!dragTarget)return;
+  dragTarget.style.left = (evt.clientX - dragOffsetX)+"px";
+  dragTarget.style.top = (evt.clientY - dragOffsetY)+"px";
+}
+function stopDrag(){
+  dragTarget = null;
+  document.removeEventListener("mousemove",onMouseMove);
+  document.removeEventListener("mouseup",stopDrag);
+}
+function setActiveWindow(winId){
+  const win = document.querySelector(`[data-win="${winId}"]`);
+  if(!win)return;
+  document.querySelectorAll(".desktop-window").forEach(w=>w.style.zIndex="");
+  win.style.zIndex = 10;
+}
+document.querySelectorAll(".window-titlebar").forEach(bar=>{
+  bar.addEventListener("mousedown",function(){
+    const win = this.closest(".desktop-window");
+    if(win)setActiveWindow(win.getAttribute("data-win"));
+  });
+});
+function closeWindow(winId){
+  const win = document.querySelector(`[data-win="${winId}"]`);
+  if(win)win.style.display = "none";
+}
+function minimizeWindow(winId){
+  const win = document.querySelector(`[data-win="${winId}"]`);
+  if(win)win.style.display = "none";
+}
+// 系统性能动画原有
+function startPcInfoAnimation(){
+  const cpuEl = document.getElementById("cpuValue");
+  const memEl = document.getElementById("memValue");
+  const hddEl = document.getElementById("hddValue");
+  const netEl = document.getElementById("netValue");
+  setInterval(()=>{
+    cpuEl.textContent = Math.floor(Math.random() * 40) + 35;
+  }, 900);
+  setInterval(()=>{
+    memEl.textContent = Math.floor(Math.random() * 25) + 50;
+  }, 1300);
+  setInterval(()=>{
+    hddEl.textContent = Math.floor(Math.random() * 15) + 65;
+  }, 1600);
+  setInterval(()=>{
+    netEl.textContent = Math.floor(Math.random() * 30) + 25;
+  }, 1100);
+}
+function startAccountProgressAnimation(){
+  const blocks = document.querySelectorAll("#accountProgress .progress-block");
+  let current = 0;
+  setInterval(()=>{
+    blocks.forEach((block,i)=>{
+      if(i < current) block.classList.remove("empty");
+      else block.classList.add("empty");
+    });
+    current++;
+    if(current > blocks.length) current = 0;
+  }, 180);
+}
+// 时钟
+function updateClock(){
+  const d = new Date();
+  let hh = String(d.getHours()).padStart(2,"0");
+  let mm = String(d.getMinutes()).padStart(2,"0");
+  document.getElementById("clock").innerText = `${hh}:${mm}`;
+}
+setInterval(updateClock,1000);
+updateClock();
+// =========新增解谜核心弹窗函数=========
+// 打开RPD系统，弹出子系统登录
+function openRpdSystem(){
+  const user = PLAYER_DATA.curOuterUser;
+  let html = `
+  <div class="modal-wrap" onclick="closeModalWrap(event)">
+    <div class="modal-box" onclick="event.stopPropagation()">
+      <div class="modal-title">
+        <span>R.P.D. System Login Verification</span>
+        <span class="modal-close" onclick="closeAllModal()">×</span>
+      </div>
+      <div class="modal-content">
+         <div style="margin:40px 0;display:flex;flex-direction:column;align-items:center;gap:14px;">
+             <div style="font-size:22px;display:flex;align-items:center;gap:10px;">
+                <span style="width:130px;text-align:right;">Account:</span>
+                <input id="rpdUser" style="background:#000;color:#4cd997;border:1px solid #4cd997;padding:6px;width:260px;font-size:20px;" value="${user}">
+         </div>
+         <div style="font-size:22px;display:flex;align-items:center;gap:10px;">
+               <span style="width:130px;text-align:right;">Password:</span>
+               <input id="rpdPwd" type="password" style="background:#000;color:#4cd997;border:1px solid #4cd997;padding:6px;width:260px;font-size:20px;">
+          </div>
+           <div style="margin-top:10px;"><button onclick="checkRpdLogin()" style="padding:8px 24px;background:#27c278;color:#051810;border:1px solid #4cd997;font-weight:bold;font-size:20px;">Login</button></div>
+        </div>
+      </div>
+    </div>
+  </div>`;
+  document.getElementById("modalContainer").innerHTML = html;
+}
+// 校验RPD子系统登录
+function checkRpdLogin(){
+  const rawInput = document.getElementById("rpdUser").value.trim();
+  // 删除所有空格，再转小写
+  const u = rawInput.replace(/\s+/g,"").toLowerCase();
+  const p = document.getElementById("rpdPwd").value.trim();
+  if(ACCOUNT_RPD[u] && ACCOUNT_RPD[u] === p){
+    PLAYER_DATA.enterRpd = true;
+    openRpdMain(u);
+  }else{
+    alert("Subsystem account or password incorrect");
+  }
+}
+// 构建邮件列表HTML（改动2：Kael匿名邮件替换为Admin-Sec服务器通知英文）
+function buildMailListHtml(user){
+  if(user === "kael"){
+    let html = "";
+    html += `<div class="mail-item locked" style="background:#dcdcdc;color:#666;border-color:#bbb;">[Read] Monthly Schedule - RPD Admin</div>`;
+    html += `<div class="mail-item locked" style="background:#dcdcdc;color:#666;border-color:#bbb;">[Read] Equipment Inventory Update</div>`;
+    html += `<div class="mail-item locked" style="background:#dcdcdc;color:#666;border-color:#bbb;">[Read] Shift Handover Notes</div>`;
+    html += `<div class="mail-item locked" style="background:#dcdcdc;color:#666;border-color:#bbb;">[Read] Training Reminder</div>`;
+    html += `<div class="mail-item locked" style="background:#dcdcdc;color:#666;border-color:#bbb;">[Read] Internal Memo - Break Room</div>`;
+    html += `<div class="mail-item locked" style="background:#dcdcdc;color:#666;border-color:#bbb;">[Read] Payroll Confirmation</div>`;
+    html += `<div class="mail-item locked" style="background:#dcdcdc;color:#666;border-color:#bbb;">[Read] System Maintenance Notice</div>`;
+    html += `<div class="mail-item encrypt" style="background:#dcdcdc;color:#000;border-color:#ff9900;cursor:pointer;" onclick="showKaelAnonymousMail()">[Internal Admin-Sec Notice] ${PLAYER_DATA.readAnonymousMail?"(Read)":""}</div>`;
+    return html;
+  }else{
+    // wesker原版邮件
+    let mailHtml = "";
+    mailHtml += `<div class="mail-item" onclick="showMail1Content()">[Mail 1] Kael Voss Password Change Request ${PLAYER_DATA.readMail1?"(Read)":""}</div>`;
+    mailHtml += `<div class="mail-item encrypt" onclick="showMail2Unlock()">[Mail 2] Encrypted Private Mail</div>`;
+    mailHtml += `<div class="mail-item" onclick="showMail3Content()">[Mail 3] Barry Burton‑Field Equipment Inventory Check</div>`;
+    mailHtml += `<div class="mail-item" onclick="showMail4Content()">[Mail 4] Chris Redfield‑Arklay Mountains Missing‑Person Summary</div>`;
+    mailHtml += `<div class="mail-item" onclick="showMail5Content()">[Mail 5] Rebecca Chambers‑Medical Supply Requisition Receipt</div>`;
+    mailHtml += `<div class="mail-item" onclick="showMail6Content()">[Mail 6] RPD Admin‑Next‑Week Staff Roster Notice</div>`;
+    mailHtml += `<div class="mail-item" onclick="showMail7Content()">[Mail 7] Albert Wesker‑Alpha Team Combat Readiness Notice</div>`;
+    mailHtml += `<div class="mail-item" onclick="showMail8Content()">[Mail 8] 【Urgent Mission】Arklay Mountain Operation Deployment</div>`;
+    return mailHtml;
+  }
+}
+// RPD系统主界面
+function openRpdMain(user){
+  const mailListHtml = buildMailListHtml(user);
+  let reportContent = "";
+  if(user === "kael"){
+    reportContent = `
+      <h2 style="color:#000;font-size:28px;margin-bottom:16px;font-weight:bold;">Operation Report</h2>
+      <div style="background:#dcdcdc;border:1px solid #999;padding:20px;">
+        <div style="font-size:18px;line-height:2.2;color:#000;">
+          <div style="opacity:0.55;">[Read] Operation Report - September 25, 1995 - Warehouse Patrol</div>
+          <div style="opacity:0.55;">[Read] Operation Report - September 22, 1996 - Perimeter Check</div>
+          <div style="opacity:0.55;">[Read] Operation Report - September 22, 1996 - Training Exercise</div>
+          <div style="opacity:0.55;">[Read] Operation Report - September 18, 1997 - Evidence Transfer</div>
+          <div style="opacity:0.55;">[Read] Operation Report - September 15, 1998 - Routine Patrol</div>
+        </div>
+      </div>
+    `;
+   }
+   else{
+    reportContent = `
+      <h2 style="color:#000;font-size:28px;margin-bottom:16px;font-weight:bold;">Operation Report <span style="color:#cc0000;">[Pending Confirmation]</span></h2>
+      <div style="background:#dcdcdc;border:1px solid #999;padding:20px;margin-bottom:16px;">
+        <div style="font-size:20px;line-height:2;color:#000;">
+          <div>Operation Date: May 27, 1998</div>
+          <div>Casualty: <span style="color:#0044cc;font-weight:bold;">kael</span> Voss</div>
+          <div>Lifespan: <span style="color:#0044cc;font-weight:bold;">April 26, 1974</span> -July 15, 1998</div>
+          <br>
+          <div>Brief: During an external mission for the Raccoon City emergency, the operative was attacked by an unknown creature and confirmed KIA. This report awaits superior account confirmation for archiving.</div>
+        </div>
+      </div>
+    `;
+   }
+  let html = `
+  <div class="modal-wrap" onclick="closeModalWrap(event)">
+    <div class="modal-box" onclick="event.stopPropagation()" style="width:920px;height:620px;">
+      <div class="modal-title">
+        <span>R.P.D. Police Department System</span>
+        <span class="modal-close" onclick="closeAllModal()">×</span>
+      </div>
+      <div style="display:flex;height:calc(100% - 36px);">
+        <div style="width:220px;background:#0b2b1b;border-right:1px solid #27c278;padding:20px 12px;">
+          <div style="font-size:22px;font-weight:bold;margin-bottom:36px;color:#4cd997;">R.P.D system</div>
+          <div id="rpdMenuReport" style="padding:10px 14px;border:1px solid #27c278;margin-bottom:12px;cursor:pointer;color:#4cd997;background:rgba(39,194,0.15);" onclick="switchRpdTab('report')">Operation Report</div>
+          <div id="rpdMenuMail" style="padding:10px 14px;border:1px solid #27c278;margin-bottom:12px;cursor:pointer;color:#4cd997;" onclick="switchRpdTab('mail')">System Mail</div>
+        </div>
+        <div style="flex:1;background:#e8e8e8;background-image:repeating-linear-gradient(0deg,transparent,transparent 1px,rgba(0,0,0,0.03) 1px,rgba(0,0,0,0.03) 2px);padding:24px;overflow:auto;">
+          <div id="rpdTabReport">${reportContent}</div>
+          <div id="rpdTabMail" style="display:none;">
+            <h3 style="color:#000;margin-bottom:10px;font-size:20px;">System Mail List</h3>
+            ${mailListHtml}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>`;
+  document.getElementById("modalContainer").innerHTML = html;
+}
+// RPD菜单切换
+function switchRpdTab(tab){
+  // 切换报告/邮件标签页 → 清除mail2倒计时
+  if(mail2Timer) clearTimeout(mail2Timer);
+
+  const reportTab = document.getElementById("rpdTabReport");
+  const mailTab = document.getElementById("rpdTabMail");
+  const reportMenu = document.getElementById("rpdMenuReport");
+  const mailMenu = document.getElementById("rpdMenuMail");
+  if(tab === "report"){
+    reportTab.style.display = "block";
+    mailTab.style.display = "none";
+    reportMenu.style.background = "rgba(39,194,120,0.15)";
+    mailMenu.style.background = "transparent";
+  }else{
+    reportTab.style.display = "none";
+    mailTab.style.display = "block";
+    reportMenu.style.background = "transparent";
+    mailMenu.style.background = "rgba(39,194,120,0.15)";
+    backToMailList();
+  }
+}
+function backToMailList(){
+  // 返回邮件列表，清除mail2的7秒定时器
+  if(mail2Timer) clearTimeout(mail2Timer);
+
+  const user = PLAYER_DATA.curOuterUser;
+  const mailListHtml = buildMailListHtml(user);
+  const mailTab = document.getElementById("rpdTabMail");
+  if(mailTab){
+    mailTab.innerHTML = `
+      <h3 style="color:#000;margin-bottom:10px;font-size:20px;">System Mail List</h3>
+      ${mailListHtml}
+    `;
+  }
+}
+// Wesker邮件1
+function showMail1Content(){
+  PLAYER_DATA.readMail1 = true;
+  const mailTab = document.getElementById("rpdTabMail");
+  mailTab.innerHTML = `
+    <div style="margin-bottom:16px;cursor:pointer;color:#27c278;text-decoration:underline;font-size:16px;" onclick="backToMailList()">← Back to Mail List</div>
+    <h3 style="color:#000;margin-bottom:10px;font-size:20px;">Mail 1 - Account Password Change Request</h3>
+    <div style="background:#dcdcdc;border:1px solid #999;padding:20px;color:#000;font-size:16px;line-height:1.8;">
+      From: kael Voss<br>
+      To: Albert Wesker<br>
+      Subject: Regarding Account Password Change Request<br><br>
+      Body: Sir, may I change my system account password by myself?<br><br>
+      Superior's reply: No. If you need to change your password, please contact the system administrator.
+    </div>
+  `;
+}
+// Wesker加密邮件解锁
+function showMail2Unlock(){
+  if(mail2Timer) clearTimeout(mail2Timer);
+  const mailTab = document.getElementById("rpdTabMail");
+  mailTab.innerHTML = `
+    <div style="margin-bottom:16px;cursor:pointer;color:#27c278;text-decoration:underline;font-size:16px;" onclick="backToMailList()">← Back to Mail List</div>
+    <h3 style="color:#000;margin-bottom:10px;font-size:20px;">Encrypted Mail Unlock</h3>
+    <div style="background:#dcdcdc;border:1px solid #999;padding:20px;color:#000;font-size:16px;">
+      <div>Enter unlock password: <input id="mail2PwdInline" style="background:#fff;color:#000;border:1px solid #666;padding:4px;"></div>
+      <div style="margin-top:12px;"><button onclick="checkMail2PwdInline()" style="padding:6px 16px;background:#27c278;color:#051810;border:1px solid #4cd997;font-weight:bold;">Unlock</button></div>
+      <div id="mail2Error" style="margin-top:10px;color:#cc0000;display:none;">Incorrect password, unable to unlock</div>
+      <div style="margin-top:10px;font-size:12px;opacity:0.7;">The End</div>
+    </div>
+  `;
+}
+function checkMail2PwdInline(){
+  // 先清除旧定时器
+  if(mail2Timer) clearTimeout(mail2Timer);
+  const p = document.getElementById("mail2PwdInline").value.trim();
+  const errorEl = document.getElementById("mail2Error");
+  if(p === KAEL_INFO.resetPwd){
+    const mailTab = document.getElementById("rpdTabMail");
+    mailTab.innerHTML = `
+    <div style="margin-bottom:16px;cursor:pointer;color:#27c278;text-decoration:underline;font-size:16px;" onclick="backToMailList()">← Back to Mail List</div>
+    <h3 style="color:#000;margin-bottom:10px;font-size:20px;">Encrypted Mail 2 Content</h3>
+    <div style="background:#dcdcdc;border:1px solid #999;padding:20px;color:#000;font-size:16px;white-space:pre-line;line-height:1.6;">From: Brian Irons
+To: Albert Wesker
+Subject: Field Dispatch Arrangements for the Arklay Region
+Date: 1998‑07‑10
+
+Albert. Multiple missing person reports have surfaced in the mountain region recently, and public outcry continues to grow.
+I have received communications relayed from corporate representatives. I was previously inclined to delay our involvement in the investigation, yet the situation can no longer be put off.
+
+I will issue official dispatch orders for S.T.A.R.S. to conduct an on‑site survey in the area.
+You will lead your team to operate around the mountain zone. No matter what findings the field mission brings back, all public statements will be handled uniformly by me. I will take care of all relevant written documentation.
+
+Wesker’s Reply:
+Acknowledged. I am fully informed of these arrangements.
+    </div>
+  `;
+    // =====【注释掉7秒自动NODATA】=====
+    //mail2Timer = setTimeout(()=>{
+    //  renderUMFNoDataScreen();
+    //},7000);
+  }else{
+    errorEl.style.display = "block";
+  }
+}
+// =====新增邮件弹窗函数====
+// Mail3 Barry Burton
+function showMail3Content(){
+  PLAYER_DATA.readMail1 = true;
+  const mailTab = document.getElementById("rpdTabMail");
+  mailTab.innerHTML = `
+    <div style="margin-bottom:16px;cursor:pointer;color:#27c278;text-decoration:underline;font-size:16px;" onclick="backToMailList()">← Back to Mail List</div>
+    <h3 style="color:#000;margin-bottom:10px;font-size:20px;">Mail 3 - Field Equipment Inventory Check</h3>
+    <div style="background:#dcdcdc;border:1px solid #999;padding:20px;color:#000;font-size:16px;line-height:1.8;">
+From: Barry Burton<br>
+To: Albert Wesker<br>
+Subject: Field Equipment Inventory Check<br><br>
+Captain. Inventory for Alpha Team firearms and first‑aid supplies has been completed.<br>
+Spare field supplies for mountain operations are stored in Storage Room No.2.
+    </div>
+  `;
+}
+
+// Mail4 Chris Redfield
+function showMail4Content(){
+  PLAYER_DATA.readMail1 = true;
+  const mailTab = document.getElementById("rpdTabMail");
+  mailTab.innerHTML = `
+    <div style="margin-bottom:16px;cursor:pointer;color:#27c278;text-decoration:underline;font-size:16px;" onclick="backToMailList()">← Back to Mail List</div>
+    <h3 style="color:#000;margin-bottom:10px;font-size:20px;">Mail 4 - Missing Person Case Summary – Arklay Mountains</h3>
+    <div style="background:#dcdcdc;border:1px solid #999;padding:20px;color:#000;font-size:16px;line-height:1.8;">
+From: Chris Redfield<br>
+To: Albert Wesker<br>
+Subject: Missing Person Case Summary – Arklay Mountains<br><br>
+Folders for multiple civilian missing‑person reports have been transferred to the S.T.A.R.S. office.<br>
+Several records bear signs of erasure and alteration; I have flagged them for archiving.
+    </div>
+  `;
+}
+
+// Mail5 Rebecca Chambers
+function showMail5Content(){
+  PLAYER_DATA.readMail1 = true;
+  const mailTab = document.getElementById("rpdTabMail");
+  mailTab.innerHTML = `
+    <div style="margin-bottom:16px;cursor:pointer;color:#27c278;text-decoration:underline;font-size:16px;" onclick="backToMailList()">← Back to Mail List</div>
+    <h3 style="color:#000;margin-bottom:10px;font-size:20px;">Mail 5 - Medical Supply Requisition Receipt</h3>
+    <div style="background:#dcdcdc;border:1px solid #999;padding:20px;color:#000;font-size:16px;line-height:1.8;">
+From: Rebecca Chambers<br>
+To: Albert Wesker<br>
+Subject: Receipt for Medical Supply Requisition<br><br>
+The emergency medical supplies I requested have been signed for and received.<br>
+I am ready to provide on‑site medical support immediately once field operations commence.
+    </div>
+  `;
+}
+
+// Mail6 RPD Admin （邮件4）
+function showMail6Content(){
+  PLAYER_DATA.readMail1 = true;
+  const mailTab = document.getElementById("rpdTabMail");
+  mailTab.innerHTML = `
+    <div style="margin-bottom:16px;cursor:pointer;color:#27c278;text-decoration:underline;font-size:16px;" onclick="backToMailList()">← Back to Mail List</div>
+    <h3 style="color:#000;margin-bottom:10px;font-size:20px;">Mail 6 - Staff Roster Notice for Next Week</h3>
+    <div style="background:#dcdcdc;border:1px solid #999;padding:20px;color:#000;font-size:16px;line-height:1.8;">
+From: Raccoon City Police Department Administration<br>
+To: S.T.A.R.S. Alpha Team<br>
+Subject: Staff Roster Notice for Next Week<br><br>
+Starting July 23rd, Alpha Team shall remain on standby, ready to receive dispatch orders from headquarters at any time.
+    </div>
+  `;
+}
+
+// Mail7 Albert Wesker（邮件5）
+function showMail7Content(){
+  PLAYER_DATA.readMail1 = true;
+  const mailTab = document.getElementById("rpdTabMail");
+  mailTab.innerHTML = `
+    <div style="margin-bottom:16px;cursor:pointer;color:#27c278;text-decoration:underline;font-size:16px;" onclick="backToMailList()">← Back to Mail List</div>
+    <h3 style="color:#000;margin-bottom:10px;font-size:20px;">Mail 7 - Alpha Team Combat Readiness Notice</h3>
+    <div style="background:#dcdcdc;border:1px solid #999;padding:20px;color:#000;font-size:16px;line-height:1.8;">
+From: Albert Wesker<br>
+To: All S.T.A.R.S. Alpha Team Members<br>
+Subject: Alpha Team Combat Readiness Notice<br><br>
+All personnel shall maintain communication watch. Assemble immediately upon receiving dispatch orders.<br>
+Unauthorized entry into the Arklay Mountain forest is prohibited.
+    </div>
+  `;
+}
+function showMail8Content(){
+  PLAYER_DATA.readMail8 = true;
+  const mailTab = document.getElementById("rpdTabMail");
+  mailTab.innerHTML = `
+    <div style="margin-bottom:16px;cursor:pointer;color:#27c278;text-decoration:underline;font-size:16px;" onclick="backToMailList()">← Back to Mail List</div>
+    <h3 style="color:#000;margin-bottom:10px;font-size:20px;">Mail 8 - URGENT: Arklay Mountain Serial Attack Case | Bravo Team Deployment</h3>
+    <div style="background:#dcdcdc;border:1px solid #999;padding:20px;color:#000;font-size:16px;line-height:1.8;">
+Subject: URGENT: Arklay Mountain Serial Attack Case | Bravo Team Deployment<br>
+Sent: July 22, 1998 14:30 Raccoon City Local Time<br>
+Priority: HIGH | NO FORWARD | Internal STARS Only<br><br>
+
+To all S.T.A.R.S personnel:<br><br>
+
+Over recent months, multiple bizarre homicide and missing‑person incidents have occurred across the Arklay Mountains. Victim remains bear marks consistent with large‑beast mauling. Several groups of civilians who entered the mountains to search are still unaccounted for. Local police lack sufficient resources to handle the situation.<br><br>
+
+Enrico Marini is appointed as on‑scene commander for Bravo Team. Complete mission briefings and full tactical equipment preparations immediately. Depart by helicopter at 22:00 on <span style="color:#0044cc;font-weight:bold;">July 23, 1998</span> to conduct reconnaissance in the Arklay Forest. Prioritize locating missing persons and securing physical evidence. Maintain constant radio watch.<br><br>
+
+Mountain nights are hazardous with extremely low visibility. Raise threat alert level for all members. Alpha Team will remain on standby at the Raccoon City base. Further operational orders will be issued based on field intelligence relayed by Bravo Team.<br><br>
+
+This information is for internal S.T.A.R.S use only. Do not disclose externally. Report immediately if high‑risk emergencies are encountered.<br><br>
+
+—— Albert Wesker
+    </div>
+  `;
+}
+// Kael Admin-Sec通知邮件（替换后的英文内容）
+function showKaelAnonymousMail(){
+  PLAYER_DATA.readAnonymousMail = true;
+  const mailTab = document.getElementById("rpdTabMail");
+  mailTab.innerHTML = `
+    <div style="margin-bottom:16px;cursor:pointer;color:#27c278;text-decoration:underline;font-size:16px;" onclick="backToMailList()">← Back to Mail List</div>
+    <h3 style="color:#000;margin-bottom:10px;font-size:20px;">Internal RPD Station Mail - Intranet Only</h3>
+    <div style="background:#dcdcdc;border:1px solid #999;padding:20px;color:#000;font-size:16px;line-height:1.8;white-space:pre-line;">Sender: <span style="color:#0044cc;font-weight:bold;">Admin-Sec</span>
+Recipient: All On-Duty Officers
+Date: September 22, 1998
+Subject: Emergency Notice After Server Hardware Failure & Account Reset
+
+Dear Colleagues,
+
+Repair work for the failed server hard disk has been completed. All officer workstation passwords have been restored to factory default credentials in bulk.
+
+Please log into your personal terminals as soon as possible and update your initial password to avoid security risks from weak credentials.
+
+The dedicated Security Administration workstation still retains its factory default key.
+Due to the sharp increase in operation workload after the repair, this workstation’s password has not been updated yet. The system has marked this account as high-risk for weak credentials, and fixes will be scheduled once maintenance staff return to duty.
+
+Temporary default password after repair: <span style="color:#0044cc;font-weight:bold;">poiuytrewq</span>
+
+⚠️ The security workstation is restricted to operation & maintenance personnel only. Do not attempt to access it to prevent triggering intranet security alerts.
+    </div>
+  `;
+}
+// 打开行动报告（旧兼容）
+function openReport(){
+  let html = `
+  <div class="modal-wrap" onclick="closeModalWrap(event)">
+    <div class="modal-box" onclick="event.stopPropagation()">
+      <div class="modal-title">
+        <span>RPD Operation Report | Pending Confirmation & Archiving</span>
+        <span class="modal-close" onclick="closeAllModal()">×</span>
+      </div>
+      <div class="modal-content">
+Operation Date: 1998-09-27<br>
+Casualty: kael Voss<br>
+Lifespan: ${KAEL_INFO.birth} - ${KAEL_INFO.dead}<br><br>
+Brief: During an external mission for the Raccoon City emergency, the operative was attacked by an unknown creature and confirmed KIA. This report awaits superior account confirmation for archiving.
+      </div>
+    </div>
+  </div>`;
+  document.getElementById("modalContainer").innerHTML = html;
+}
+function readMail1(){
+  PLAYER_DATA.readMail1 = true;
+  let html = `
+  <div class="modal-wrap" onclick="closeModalWrap(event)">
+    <div class="modal-box" onclick="event.stopPropagation()">
+      <div class="modal-title">
+        <span>Mail 1 - Account Password Change Request</span>
+        <span class="modal-close" onclick="closeAllModal()">×</span>
+      </div>
+      <div class="modal-content">
+From: kael Voss<br>
+To: Albert Wesker<br>
+Subject: Regarding Account Password Change Request<br><br>
+Body: Sir, may I change my system account password by myself?<br><br>
+Superior's reply: No. If you need to change your password, please contact the system administrator.
+      </div>
+    </div>
+  </div>`;
+  document.getElementById("modalContainer").innerHTML = html;
+}
+function unlockMail2(){
+  let html = `
+  <div class="modal-wrap" onclick="closeModalWrap(event)">
+    <div class="modal-box" onclick="event.stopPropagation()">
+      <div class="modal-title">
+        <span>Encrypted Mail Unlock</span>
+        <span class="modal-close" onclick="closeAllModal()">×</span>
+      </div>
+      <div class="modal-content">
+        <div>Enter unlock password: <input id="mail2Pwd" style="background:#000;color:#4cd997;border:1px solid #4cd997;padding:4px;"></div>
+        <div style="margin-top:12px;"><button onclick="checkMail2Pwd()">Unlock</button></div>
+        <div style="margin-top:10px;font-size:12px;opacity:0.7;">Hint: Related to the reset business system password</div>
+      </div>
+    </div>
+  </div>`;
+  document.getElementById("modalContainer").innerHTML = html;
+}
+
+// 废纸篓功能不变
+function openTrash(){
+  PLAYER_DATA.getTrashPwd = true;
+  let html = `
+  <div class="modal-wrap" onclick="closeModalWrap(event)">
+    <div class="modal-box" onclick="event.stopPropagation()" style="width:820px;height:520px;">
+      <div class="modal-title">
+        <span>Recycle Bin</span>
+        <span class="modal-close" onclick="closeAllModal()">×</span>
+      </div>
+      <div style="display:flex;height:calc(100% - 36px);">
+        <div style="width:200px;background:#0b2b1b;border-right:1px solid #27c278;padding:20px 12px;">
+          <div style="font-size:20px;font-weight:bold;margin-bottom:30px;color:#4cd997;">Recycle Bin</div>
+          <div id="trashMenuMail" style="padding:10px 14px;border:1px solid #27c278;margin-bottom:12px;cursor:pointer;color:#4cd997;background:rgba(39,194,120,0.15);" onclick="switchTrashTab('mail')">Deleted Mails</div>
+          <div id="trashMenuFile" style="padding:10px 14px;border:1px solid #27c278;margin-bottom:12px;cursor:pointer;color:#4cd997;" onclick="switchTrashTab('file')">Deleted Files</div>
+        </div>
+        <div style="flex:1;background:#e8e8e8;background-image:repeating-linear-gradient(0deg,transparent,transparent 1px,rgba(0,0,0,0.03) 1px,rgba(0,0,0,0.03) 2px);padding:24px;overflow:auto;">
+          <div id="trashTabMail">
+            <h3 style="color:#000;margin-bottom:10px;font-size:20px;">Deleted Mails</h3>
+            <div class="mail-item" style="background:#dcdcdc;color:#000;border-color:#999;cursor:pointer;" onclick="showTrashPwdMail()">Password Reset Request - System Administrator</div>
+            <div class="mail-item locked" style="background:#dcdcdc;color:#666;border-color:#bbb;">Old Newsletter - RPD HR</div>
+            <div class="mail-item locked" style="background:#dcdcdc;color:#666;border-color:#bbb;">Meeting Notes - Sep 20</div>
+            <div class="mail-item locked" style="background:#dcdcdc;color:#666;border-color:#bbb;">Shift Schedule Update</div>
+            <div class="mail-item locked" style="background:#dcdcdc;color:#666;border-color:#bbb;">Equipment Maintenance Report</div>
+          </div>
+          <div id="trashTabFile" style="display:none;">
+            <h3 style="color:#000;margin-bottom:10px;font-size:20px;">Deleted Files</h3>
+            <div class="mail-item locked" style="background:#dcdcdc;color:#666;border-color:#bbb;">📄 old_report.doc</div>
+            <div class="mail-item locked" style="background:#dcdcdc;color:#666;border-color:#bbb;">📄 temp_notes.txt</div>
+            <div class="mail-item locked" style="background:#dcdcdc;color:#666;border-color:#bbb;">📁 backup_1998</div>
+            <div class="mail-item locked" style="background:#dcdcdc;color:#666;border-color:#bbb;">📄 scan_001.jpg</div>
+            <div class="mail-item locked" style="background:#dcdcdc;color:#666;border-color:#bbb;">📄 draft_memo.doc</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>`;
+  document.getElementById("modalContainer").innerHTML = html;
+}
+function switchTrashTab(tab){
+  const mailTab = document.getElementById("trashTabMail");
+  const fileTab = document.getElementById("trashTabFile");
+  const mailMenu = document.getElementById("trashMenuMail");
+  const fileMenu = document.getElementById("trashMenuFile");
+  if(tab === "mail"){
+    mailTab.style.display = "block";
+    fileTab.style.display = "none";
+    mailMenu.style.background = "rgba(39,194,120,0.15)";
+    fileMenu.style.background = "transparent";
+  }else{
+    mailTab.style.display = "none";
+    fileTab.style.display = "block";
+    mailMenu.style.background = "transparent";
+    fileMenu.style.background = "rgba(39,194,120,0.15)";
+  }
+}
+function showTrashPwdMail(){
+  const mailTab = document.getElementById("trashTabMail");
+  mailTab.innerHTML = `
+    <div style="margin-bottom:16px;cursor:pointer;color:#27c278;text-decoration:underline;font-size:16px;" onclick="backToTrashMailList()">← Back to Deleted Mails</div>
+    <h3 style="color:#000;margin-bottom:10px;font-size:20px;">Password Reset Request</h3>
+    <div style="background:#dcdcdc;border:1px solid #999;padding:20px;color:#000;font-size:16px;line-height:1.8;">
+      From: kael Voss<br>
+      To: System Administrator<br>
+      Body: Hello administrator, I forgot my account password, requesting a login password reset.<br><br>
+      ————Administrator Reply————<br>
+      Account password reset completed. Your business system password: <span style="color:#cc0000;font-weight:bold;">reasdf</span>
+    </div>
+  `;
+}
+function backToTrashMailList(){
+  const mailTab = document.getElementById("trashTabMail");
+  mailTab.innerHTML = `
+    <h3 style="color:#000;margin-bottom:10px;font-size:20px;">Deleted Mails</h3>
+    <div class="mail-item" style="background:#dcdcdc;color:#000;border-color:#999;cursor:pointer;" onclick="showTrashPwdMail()">Password Reset Request - System Administrator</div>
+    <div class="mail-item locked" style="background:#dcdcdc;color:#666;border-color:#bbb;">Old Newsletter - RPD HR</div>
+    <div class="mail-item locked" style="background:#dcdcdc;color:#666;border-color:#bbb;">Meeting Notes - Sep 20</div>
+    <div class="mail-item locked" style="background:#dcdcdc;color:#666;border-color:#bbb;">Shift Schedule Update</div>
+    <div class="mail-item locked" style="background:#dcdcdc;color:#666;border-color:#bbb;">Equipment Maintenance Report</div>
+  `;
+}
+function readAnonymousMail(){
+  PLAYER_DATA.readAnonymousMail = true;
+  let list = `
+1. Albert Wesker (main outer account)<br>
+2. ${WESKER_SEC.name} (Albert Wesker backup secondary outer account | password: ${WESKER_SEC.pwd})<br>
+3. kael<br>
+4. mail-item locked" style="background:#dcdcdc;color:#666;border-color:#bbb;">4. oren hale<br>
+5. milo ford<br>
+6. elsa reid<br>
+7. cole vega<br>
+8. lune moss<br>
+9. jesse pike<br>
+10. derek ross
+  `;
+  let html = `
+  <div class="modal-wrap" onclick="closeModalWrap(event)">
+    <div class="modal-box" onclick="event.stopPropagation()">
+      <div class="modal-title">
+        <span>Anonymous Mail - RPD Full Account List</span>
+        <span class="modal-close" onclick="closeAllModal()">×</span>
+      </div>
+      <div class="modal-content">
+Sent from unknown source<br><br>
+All police department system accounts, 10 total:<br>
+${list}<br><br>
+Hint: The second account has higher system privileges.
+      </div>
+    </div>
+  </div>`;
+  document.getElementById("modalContainer").innerHTML = html;
+}
+// 关闭弹窗通用
+function closeModalWrap(e){
+  if(e.target.classList.contains("modal-wrap")) closeAllModal();
+}
+function closeAllModal(){
+  // 关闭弹窗销毁计时器
+  if(mail2Timer) clearTimeout(mail2Timer);
+  document.getElementById("modalContainer").innerHTML = "";
+}
+// 异常账号中毒全屏特效入口
+function triggerVirusEffect(){
+  const overlay = document.getElementById("virusOverlay");
+  overlay.style.display = "block";
+  overlay.innerHTML = "";
+  // 先黑屏2秒
+  setTimeout(() => {
+    // 白绿配色报错弹窗文本
+    const errTexts = [
+      "ACCOUNT ABNORMAL\nThe user account is invalid or locked.",
+      "SERVER OFFLINE\nRemote server connection failed.",
+      "PERMISSION VIOLATION\nAdministrator privileges required.",
+      "SESSION CORRUPTED\nSession data has been damaged.",
+      "FIREWALL ALERT\nSuspicious network traffic detected.",
+      "REMOTE BACKDOOR DETECTED\nUnauthorized access entry found.",
+     "UNAUTHORIZED ACCESS\nYou cannot access this resource.",
+     "SYSTEM INTEGRITY BREACH\nCritical core files modified."
+    ];
+    // 一个接一个连续弹出弹窗
+    errTexts.forEach((text, i) => {
+      setTimeout(() => {
+        const pop = document.createElement("div");
+        pop.className = "errPop";
+    // 限制弹窗不超出屏幕
+        const maxW = window.innerWidth - 300;
+        const maxH = window.innerHeight - 140;
+        pop.style.left = Math.floor(Math.random() * maxW) + "px";
+        pop.style.top = Math.floor(Math.random() * maxH) + "px";
+    // 老式弹窗完整HTML结构
+        pop.innerHTML = `
+          <div class="errPop-titlebar">
+            <span>System Error</span>
+            <span class="errPop-close">×</span>
+          </div>
+          <div class="errPop-body">
+            <span class="errPop-icon">⚠</span>
+            <div class="errPop-text">${text}</div>
+          </div>
+          <div class="errPop-btn">
+            <button>OK</button>
+          </div>
+        `;
+        overlay.appendChild(pop);
+    // 点击OK/叉号关闭弹窗
+        pop.querySelector(".errPop-close").onclick = () => pop.remove();
+        pop.querySelector("button").onclick = () => pop.remove();
+      }, i * 150);
+   });
+    // 所有弹窗弹出后停留1.5秒，清除并开始扫描
+    setTimeout(() => {
+      overlay.innerHTML = "";
+      const scanLines = [
+        "[INIT] Establishing secure tunnel...",
+        "[INIT] Bypassing RPD perimeter firewall...",
+        "[SCAN] Port 22 ...... OPEN",
+        "[SCAN] Port 80 ...... OPEN",
+        "[SCAN] Port 443 ..... FILTERED",
+        "[SCAN] Port 3389 .... OPEN",
+        "[INFO] Host fingerprint: RPD-WINNT-4.0",
+        "[INFO] Detected domain: RACCOON-POLICE.INTRA",
+        "[SCAN] Enumerating user accounts...",
+        "[FOUND] admin, wesker, kael, Admin-Sec, CNDGTVYGUMG",
+        "[SCAN] Reading /etc/shadow ......... OK",
+        "[SCAN] Dumping SAM registry ........ OK",
+        "[SCAN] Extracting LSASS memory ..... OK",
+        "[CRACK] Cracking NTLM hashes...",
+        "[CRACK] wesker:******** .......... SUCCESS",
+        "[CRACK] kael:******** ............ SUCCESS",
+        "[SCAN] Searching remote access logs...",
+        "[SCAN] Retrieving session 09-23-0317",
+        "[SCAN] Loading firewall audit file...",
+        "[SCAN] Reading security_audit_0923.log",
+        "[SCAN] Decrypting access metadata...",
+        "[SCAN] Cross-referencing badge IDs...",
+        "[WARN] Multiple failed login attempts detected",
+        "[WARN] Source IP: 10.13.37.42 (unregistered)",
+        "[WARN] MAC: 00:1A:4B:8C:9D:2E",
+        "[SCAN] Accessing case archive database...",
+        "[SCAN] Table: cases ............ 1,247 records",
+        "[SCAN] Table: evidence ......... 89 records",
+        "[SCAN] Table: personnel ........ 156 records",
+        "[SCAN] Table: incident_reports . 312 records",
+        "[SCAN] Downloading classified files...",
+        "[DATA] case_0987.pdf ........... 2.4MB",
+        "[DATA] evidence_log_0923.doc ... 1.1MB",
+        "[DATA] personnel_roster.xls .... 0.8MB",
+        "[SCAN] Wiping access traces...",
+        "[CLEAN] Event log cleared ...... OK",
+        "[CLEAN] Temp files removed ..... OK",
+        "[CLEAN] DNS cache flushed ...... OK",
+        "",
+        ">>> YOU WISH TO PROCEED VIEWING THE RECORD ? [ YES / NO ]"
+      ];
+      let lineIdx = 0;
+      function printScan(){
+        if(lineIdx >= scanLines.length){
+          // 扫描结束，显示终端输入行
+          const inputLine = document.createElement("div");
+          inputLine.className = "terminal-input-line red-text";
+          inputLine.innerHTML = '<span style="color:#ff2222;">root@rpd:~#</span> <input id="virusInput" type="text" autocomplete="off" spellcheck="false">';
+          overlay.appendChild(inputLine);
+          const input = document.getElementById("virusInput");
+          input.focus();
+          input.addEventListener("keydown", function(e){
+            if(e.key === "Enter"){
+              handleScanChoice();
+            }
+          });
+          return;
+        }
+        const line = scanLines[lineIdx];
+        if(lineIdx === scanLines.length - 1){
+          // 最后一行提示用红色
+          overlay.innerHTML += '<span class="red-text">' + line + '</span>\n';
+        }else{
+          overlay.innerHTML += line + "\n";
+        }
+        lineIdx++;
+        // 扫描行速度有变化，更像真实扫盘
+        const delay = line.startsWith("[SCAN]") ? 120 : (line.startsWith("[CRACK]") ? 400 : 200);
+        setTimeout(printScan, delay);
+      }
+      printScan();
+    }, errTexts.length * 150 + 1500);
+  }, 2000);
+}
+// YES/NO 选择处理函数（终端回车提交）
+// YES/NO 选择处理函数（终端回车提交）
+function handleScanChoice(){
+  const inputVal = document.getElementById("virusInput").value.trim().toUpperCase();
+  const audio = document.getElementById("virusAudio");
+  const overlay = document.getElementById("virusOverlay");
+
+  // 最终404显示函数
+  function showFullScreen404(){
+    overlay.style.background = "#000000";
+    overlay.style.display = "flex";
+    overlay.style.alignItems = "center";
+    overlay.style.justifyContent = "center";
+    overlay.style.fontFamily = "Consolas,monospace";
+    overlay.style.color = "#ffffff";
+    overlay.style.fontSize = "26px";
+    overlay.innerHTML = "404 SERVER OFFLINE";
+  }
+
+  // 打字逐行输出函数（红字输出，一行一行延迟打印）
+  async function typeEndingText(){
+    overlay.style.display = "block";
+    overlay.style.background = "#000000";
+    overlay.style.flexDirection = "unset";
+    overlay.style.justifyContent = "unset";
+    overlay.style.alignItems = "unset";
+    overlay.innerHTML = "";
+
+    // 需要输出的全部行
+    const lines = [
+      "The End…",
+      "The End…",
+      "The End…",
+      "The End…",
+      "The End…",
+      "The End…",
+      "The End…",
+      "The End…",
+      "The End…",
+      "The End…",
+      "The End…",
+      "",
+      "June 3rd, 1978",
+      "A day worthy of commemoration. Today they begin to mimic me! Surely they recognize their father…",
+      "Wonderful children. No one shall take them away from me…"
+    ];
+
+    for(let line of lines){
+      const span = document.createElement("span");
+      span.className = "red-text";
+      span.textContent = line + "\n";
+      overlay.appendChild(span);
+      await new Promise(resolve=>setTimeout(resolve,350)); // 每行间隔350ms打字效果
+    }
+
+    // 全部文字打印完，等待7000毫秒(7秒)，弹出404
+    setTimeout(()=>{
+      showFullScreen404();
+    },7000);
+  }
+
+  if(inputVal === "YES"){
+    overlay.innerHTML += '<span class="red-text">root@rpd:~# ' + inputVal + '</span>\n';
+    overlay.innerHTML += '<span class="red-text">[ACCESS GRANTED] Decrypting record...</span>\n';
+    audio.volume = 1;
+    audio.currentTime = 0;
+    audio.onended = null;
+    audio.play().catch(err => console.log(err));
+    // 音频播放结束 → 执行红字打字结尾，不再直接404
+    audio.onended = function(){
+      showFullScreen404();
+    };
+  }else{
+    // 输入NO，直接404不变
+    showFullScreen404();
+  }
+}
+//==== Wesker图片查看器逻辑 ====
+// 两张图片路径，修改这里换成你的图片文件名
+const imageList = [
+  "./assets/photo1.jpg",
+  "./assets/photo2.jpg"
+];
+let currentImageIndex = 0;
+
+// 更新显示图片
+function renderImageView(){
+  const imgEl = document.getElementById("imageViewerImg");
+  imgEl.src = imageList[currentImageIndex];
+}
+
+//打开弹窗
+function openImageViewer(){
+  currentImageIndex = 1;
+  renderImageView();
+  document.getElementById("imageViewerWrap").style.display = "flex";
+}
+//关闭弹窗
+function closeImageViewer(){
+  document.getElementById("imageViewerWrap").style.display = "none";
+}
+//上一张
+function imagePrev(){
+  currentImageIndex--;
+  if(currentImageIndex < 0){
+    currentImageIndex = imageList.length -1;
+  }
+  renderImageView();
+}
+//下一张
+function imageNext(){
+  currentImageIndex++;
+  if(currentImageIndex >= imageList.length){
+    currentImageIndex =0;
+  }
+  renderImageView();
+}
+</script>
+<!-- UMF‑013 全屏黑屏，覆盖整个屏幕 -->
+<div id="umfFullOverlay" style="position:fixed;inset:0 !important;background:#090f0e;z-index:999999 !important;display:none;flex-direction:column;align-items:center;justify-content:center;overflow:hidden;margin:0;padding:0;">
+  <style>
+    .umf-scan-bg{
+      position:absolute;
+      inset:0;
+      background-image: repeating-linear-gradient(transparent 0px, rgba(50,80,70,0.13) 1px, transparent 2px);
+      pointer-events:none;
+    }
+  </style>
+  <div class="umf-scan-bg"></div>
+  <div style="color:#66ff88;font-family:Consolas,monospace;font-size:52px;text-align:center;z-index:2;line-height:1.4;">
+    U.M.F.-013<br>
+    NO DATA
+  </div>
+</div>
+<!-- 病毒全屏遮罩 -->
+ <!-- Wesker图片查看弹窗 -->
+<div id="imageViewerWrap">
+  <div id="imageViewerBox">
+    <img id="imageViewerImg" src="">
+    <div class="image-viewer-buttons">
+      <button onclick="imagePrev()">Previous</button>
+      <button onclick="imageNext()">Next</button>
+      <button onclick="closeImageViewer()">Close</button>
+    </div>
+  </div>
+</div>
+<div id="virusOverlay">
+</div>
+<!-- 音频标签，替换你的音频路径 -->
+<audio id="virusAudio" preload="auto">
+  <source src="./assets/music.MP3" type="audio/mpeg">
+</audio>
+<!-- Albert Wesker 密码超限弹窗 纯MessageBox，无File Edit View菜单 -->
+<div id="loginLockPopup" style="position:fixed;z-index:9999;inset:0;background:rgba(0,0,0,0.7);display:none;align-items:center;justify-content:center;">
+  <!-- 复刻截图窗口，移除右上角最小化、X按钮 -->
+  <div style="background:#c2c2c2;border:3px solid #222;min-width:480px;font-family:'MS Sans Serif',Menlo,monospace;">
+    <!-- 标题栏，只保留标题文字 -->
+    <div style="background:#c0c4c4;color:#000000;padding:4px 8px;display:flex;justify-content:flex-start;align-items:center;font-weight:bold;font-size:17px;">
+      <span>◆ S.T.A.R.S. SECURITY TERMINAL ◆</span>
+    </div>
+    <!-- 绿色内容区，居中文字，仅保留内部CONFIRM点击文本 -->
+    <div style="background:#0f221c;padding:24px 20px;line-height:1.7;font-size:15px;color:#ffffff;text-align:center;min-height:170px;">
+Password attempt limit reached, server offline.<br>
+Account anomaly detected. Password has been reset to <span style="color:#0060ff;font-weight:bold;">employee ID</span>. Please log in again.<br><br>
+Access log archived.<br><br>
+<span onclick="closeLoginLockPopup()" style="cursor:pointer;text-decoration:underline;">【CONFIRM】</span>
+    </div>
+  </div>
+</div>
+<video id="specialVideo" playsinline style="position:fixed;inset:0;z-index:999998;display:none;width:100vw;height:100vh;object-fit:fill;">
+  <source src="./assets/video.MP4" type="video/mp4">
+</video>
+</body>
+</html>
