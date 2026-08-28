@@ -1220,11 +1220,11 @@ function openRpdMain(user){
    }
    else{
     reportContent = `
-      <h2 style="color:#000;font-size:28px;margin-bottom:16px;font-weight:bold;">Operation Report <span style="color:#cc0000;">[Pending Confirmation]</span></h2>
+      <h2 style="color:#000;font-size:22px;margin-bottom:16px;font-weight:bold;white-space:nowrap;">Operation Report <span style="color:#cc0000;">[Pending Confirmation]</span></h2>
       <div style="background:#dcdcdc;border:1px solid #999;padding:20px;margin-bottom:16px;">
         <div style="font-size:20px;line-height:2;color:#000;">
           <div>Operation Date: May 27, 1998</div>
-          <div>Casualty: <span style="color:#0044cc;font-weight:bold;">Kael</span> Voss</div>
+          <div>Casualty: <span style="color:#0044cc;font-weight:bold;">Kael Voss</span></div>
           <div>Lifespan: <span style="color:#0044cc;font-weight:bold;">April 26, 1974</span> -July 15, 1998</div>
           <br>
           <div>Brief: During an external mission for the Raccoon City emergency, the operative was attacked by an unknown creature and confirmed KIA. This report awaits superior account confirmation for archiving.</div>
@@ -1242,7 +1242,7 @@ function openRpdMain(user){
       <div style="display:flex;height:calc(100% - 36px);">
         <div style="width:220px;background:#0b2b1b;border-right:1px solid #27c278;padding:20px 12px;">
           <div style="font-size:22px;font-weight:bold;margin-bottom:36px;color:#4cd997;">R.P.D system</div>
-          <div id="rpdMenuReport" style="padding:10px 14px;border:1px solid #27c278;margin-bottom:12px;cursor:pointer;color:#4cd997;background:rgba(39,194,0.15);" onclick="switchRpdTab('report')">Operation Report</div>
+          <div id="rpdMenuReport" style="padding:10px 14px;border:1px solid #27c278;margin-bottom:12px;cursor:pointer;color:#4cd997;background:rgba(39,194,200,0.15);" onclick="switchRpdTab('report')">Operation Report</div>
           <div id="rpdMenuMail" style="padding:10px 14px;border:1px solid #27c278;margin-bottom:12px;cursor:pointer;color:#4cd997;" onclick="switchRpdTab('mail')">System Mail</div>
         </div>
         <div style="flex:1;background:#e8e8e8;background-image:repeating-linear-gradient(0deg,transparent,transparent 1px,rgba(0,0,0,0.03) 1px,rgba(0,0,0,0.03) 2px);padding:24px;overflow:auto;">
