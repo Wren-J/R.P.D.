@@ -14,4 +14,4 @@ Resident Evil Fan-made Creation
 If you encounter page bugs, flawed puzzle logic, text errors or other issues, feel free to create a new Issue in this repository. I will receive the notification and handle it as soon as possible.
 
 感谢支持
-Thank for you support
+Thanks for you support
