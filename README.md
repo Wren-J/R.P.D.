@@ -6,6 +6,7 @@
 
 感谢大家的支持！
 
+//视频里的猫不是我家的 待替换
 ---
 
 # R.P.D. Fake ARG Web Puzzle
@@ -15,3 +16,5 @@ Resident Evil fan-made non-commercial project.
 If you encounter page bugs, flawed puzzle logic, text errors or other issues, feel free to create a new Issue in this repository. I will receive the notification and handle it as soon as possible.
 
 Thank you for your support!
+
+//The cat in the video is not mine, pending replacement.
