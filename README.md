@@ -6,7 +6,7 @@
 
 感谢大家的支持！
 
-//视频里的猫不是我家的 待替换
+//本视频内猫咪图片非本人原创，若涉及侵权，恳请原作者及时与我取得联系。
 ---
 
 # R.P.D. Fake ARG Web Puzzle
@@ -17,4 +17,4 @@ If you encounter page bugs, flawed puzzle logic, text errors or other issues, fe
 
 Thank you for your support!
 
-//The cat in the video is not mine, pending replacement.
+//The cat images in this video are not my original work. If there is any infringement, the original author is welcome to contact me promptly.
